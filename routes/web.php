@@ -38,15 +38,17 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
 $router->group(['prefix' => 'cart'], function () use ($router) {
 
+  $router->post('create',  ['uses' => 'CartController@newCart']);
+
   $router->get('show',  ['uses' => 'CartController@showCart']);
 
-  $router->delete('delete', ['uses' => 'ProductController@deleteAll']);
+  $router->delete('delete', ['uses' => 'ProductController@destroy']);
 
   $router->post('add{item}',  ['uses' => 'CartController@addItem']);
 
   $router->post('remove{item}',  ['uses' => 'CartController@removeItem']);
 
-  $router->patch('item/{item_id}/count/{count}', ['uses' => 'CatalogController@updateItem']);
+  $router->patch('item/{item_id}/quantity/{quantity}', ['uses' => 'CatalogController@updateItem']);
 
   $router->get('totalPrice{currency}',  ['uses' => 'CartController@getTotalPrice']);
 
