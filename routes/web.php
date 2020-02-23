@@ -38,6 +38,12 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
 $router->group(['prefix' => 'cart'], function () use ($router) {
 
+  /**
+  * Routes for cookies check
+  */
+  $router->get('/cookie/set','CookieController@setCookie');
+  $router->get('/cookie/get','CookieController@getCookie');
+
   $router->post('create',  ['uses' => 'CartController@newCart']);
 
   $router->get('show',  ['uses' => 'CartController@showCart']);

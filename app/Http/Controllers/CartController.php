@@ -11,13 +11,12 @@ class CartController extends Controller
 {
 
   //TODO
-
   function newCart() {
     $cart = Cart::create([
       'id' => md5(uniqid(rand(), true)
     ])
 
-    return response('Created Successfully', 201);
+    return response('C Successfully', 201);
   }
 
   //TODO

@@ -29,6 +29,7 @@ class CatalogController extends Controller
     return response()->json($catalog, 201);
   }
 
+//TODO: Check on Postman
   public function attach($catalog_id, $product_id) {
     $catalog = Catalog::find($catalog_id);
     $product = Product::find($product_id);
@@ -38,6 +39,7 @@ class CatalogController extends Controller
   }
 
 
+//TODO: Check on Postman
   public function detach($catalog_id, $product_id) {
     $catalog = Catalog::find($catalog_id);
     $product = Product::find($product_id);

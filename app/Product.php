@@ -22,16 +22,16 @@ class Product extends Model
    */
   protected $hidden = [];
 
-  /*
-    Define the relationship with catalog: Many to many
-  */
+  /**
+    * Define the relationship with catalog: Many to many
+    */
   public function catalog() {
       return $this->belongsToMany('App\Catalog');
   }
 
-  /*
-    Define the relationship with cart
-  */
+  /**
+    * Define the relationship with cart
+    */
   public function cart()
   {
       return $this->belongsTo(Cart::class);
