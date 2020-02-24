@@ -11,17 +11,20 @@
 |
 */
 
+// $router->get('/cookie/set','CookieController@setCookie');
+// $router->get('/cookie/get','CookieController@getCookie');
+
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
 $router->group(['prefix' => 'api'], function () use ($router) {
 
+  $router->get('products/filter', ['uses' => 'ProductController@filterProductsByName']);
+
   $router->get('products',  ['uses' => 'ProductController@showAllProducts']);
 
   $router->get('products/{id}', ['uses' => 'ProductController@showProductById']);
-
-  $router->post('products/filter?name={name}', ['uses' => 'ProductController@filterProductsByName']);
 
   $router->post('product', ['uses' => 'ProductController@addNewProduct']);
 
@@ -41,23 +44,19 @@ $router->group(['prefix' => 'cart'], function () use ($router) {
   /**
   * Routes for cookies check
   */
-  $router->get('/cookie/set','CookieController@setCookie');
-  $router->get('/cookie/get','CookieController@getCookie');
-
-  $router->post('create',  ['uses' => 'CartController@newCart']);
 
   $router->get('show',  ['uses' => 'CartController@showCart']);
 
-  $router->delete('delete', ['uses' => 'ProductController@destroy']);
+  $router->delete('delete', ['uses' => 'CartController@destroy']);
 
-  $router->post('add{item}',  ['uses' => 'CartController@addItem']);
+  $router->post('add/{item}',  ['uses' => 'CartController@addItem']);
 
-  $router->post('remove{item}',  ['uses' => 'CartController@removeItem']);
+  $router->post('remove/{item}/{quantity?}',  ['uses' => 'CartController@removeItem']);
 
-  $router->patch('item/{item_id}/quantity/{quantity}', ['uses' => 'CatalogController@updateItem']);
+  $router->patch('item/{item_id}/quantity/{quantity}', ['uses' => 'CartController@updateItem']);
 
-  $router->get('totalPrice{currency}',  ['uses' => 'CartController@getTotalPrice']);
+  $router->get('totalPrice/{currency}',  ['uses' => 'CartController@getTotalPrice']);
 
-  $router->get('sortBy{type}',  ['uses' => 'CartController@sortItems']);
+  $router->patch('sort/{type}',  ['uses' => 'CartController@sortItems']);
 
 });

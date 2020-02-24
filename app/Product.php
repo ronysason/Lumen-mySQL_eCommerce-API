@@ -28,12 +28,4 @@ class Product extends Model
   public function catalog() {
       return $this->belongsToMany('App\Catalog');
   }
-
-  /**
-    * Define the relationship with cart
-    */
-  public function cart()
-  {
-      return $this->belongsTo(Cart::class);
-  }
 }

@@ -46,12 +46,12 @@ class ProductController extends Controller
     /**
      * Show all products in the database containing the given string in their name
      */
-    public function filterProductsByName(Request $request, Product $product)
+    public function filterProductsByName(Request $request)
     {
-        if ($request->has('filter')) {
-            return $product->where('name', 'like', '%' . $filter . '%')->get();
-        } else {
-            return null;
-        }
+        $filter = $request->input('name');
+        $catalog = $request->input('catalog');
+        echo var_dump($catalog);
+        echo var_dump($filter);
+        return Product::where('name', 'like', '%' . $filter . '%')->get();
     }
 }
