@@ -13,6 +13,7 @@ class CatalogController extends Controller
     public function showCatalogProducts($id)
     {
         $catalog = Catalog::find($id);
+
         $productInCatalog = array();
 
         foreach ($catalog->products as $product) {
@@ -28,36 +29,24 @@ class CatalogController extends Controller
         return response()->json($catalog, 201);
     }
 
-    /**
-     * @param Request $request - PATCH query parameters
-     * @return string
-     */
-    public function attach(Request $request)
+//TODO: Check on Postman
+    public function attach($catalog_id, $product_id)
     {
-        $catalog_id = $request->input('catalog');
-        $product_id = $request->input('product');
-
         $catalog = Catalog::find($catalog_id);
         $product = Product::find($product_id);
 
         $catalog->products()->attach($product);
-        return 'Attached successfully';
+        return 'Success';
     }
 
 
-    /**
-     * @param Request $request - PATCH query parameters
-     * @return string
-     */
-    public function detach(Request $request)
+//TODO: Check on Postman
+    public function detach($catalog_id, $product_id)
     {
-        $catalog_id = $request->input('catalog');
-        $product_id = $request->input('product');
-
         $catalog = Catalog::find($catalog_id);
         $product = Product::find($product_id);
 
         $catalog->products()->detach($product);
-        return 'Detached successfully';
+        return 'Success';
     }
 }

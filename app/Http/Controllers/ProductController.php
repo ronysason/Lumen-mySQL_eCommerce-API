@@ -44,8 +44,6 @@ class ProductController extends Controller
 
     /**
      * Show all products in the database containing the given string in their name
-     * @param Request $request - GET query parameters
-     * @return Products - filtered by name
      */
     public function filterProductsByName(Request $request)
     {
