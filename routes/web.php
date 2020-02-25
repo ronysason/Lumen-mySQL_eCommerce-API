@@ -11,9 +11,6 @@
 |
 */
 
-// $router->get('/cookie/set','CookieController@setCookie');
-// $router->get('/cookie/get','CookieController@getCookie');
-
 $router->get('/', function () use ($router) {
     return $router->app->version();
 });
@@ -47,11 +44,11 @@ $router->group(['prefix' => 'cart'], function () use ($router) {
 
     $router->post('add/{item}', ['uses' => 'CartController@addItem']);
 
-    $router->post('remove/{item}/{quantity?}', ['uses' => 'CartController@removeItem']);
+    $router->delete('remove/{item}', ['uses' => 'CartController@removeItem']);
 
-    $router->patch('item/{item_id}/quantity/{quantity}', ['uses' => 'CartController@updateItem']);
+    $router->patch('update/{item}/{quantity}', ['uses' => 'CartController@updateItem']);
 
-    $router->get('totalPrice/{currency?}', ['uses' => 'CartController@getTotalPrice']);
+    $router->get('total/{currency}', ['uses' => 'CartController@getTotalPrice']);
 
     $router->patch('sort/{type}', ['uses' => 'CartController@sortItems']);
 

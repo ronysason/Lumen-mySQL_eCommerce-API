@@ -6,12 +6,13 @@ use App\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
-use function MongoDB\BSON\toJSON;
 
 class CartController extends Controller
 {
-
-    function getCookieName() {return "cart_items";}
+    function getCookieName()
+    {
+        return "cart_items";
+    }
 
     /**
      * Responsible for retrieving and decoding (from json) the cart stored in the cookie
@@ -33,6 +34,7 @@ class CartController extends Controller
         return $saved_cart_items;
     }
 
+
     /**
      * Returning all cart items as an array
      */
@@ -41,10 +43,12 @@ class CartController extends Controller
         $cart = $this->getCookieCart();
         $array_keys = array_keys($cart);
 
-        $prods = Product::whereIn('id', $array_keys)->orderBy('id', 'desc')->get();
+        $prods = Product::whereIn('id', $array_keys)->get();
         $displayProds = array();
+
         foreach ($prods as $prod) {
             array_push($displayProds, array(
+                'id' => $prod->id,
                 'name' => $prod->name,
                 'price' => doubleval($prod->price),
                 'qty' => $this->getQtyFromCart($prod->id)
@@ -76,19 +80,7 @@ class CartController extends Controller
         }
         return $cart[$item_id];
     }
-    /**/
 
-    /**
-     * Responsible for storing the cart in cookies and serializing it.
-     * @param $cart - cart that should be serialized
-     * @return bool
-     */
-    function setCookieCart($cart)
-    {
-        $cookie_name = $this->getCookieName();
-        $cart_json = json_encode($cart);
-        return setcookie($cookie_name, $cart_json, time() + (86400 * 30), '/'); // 86400 = 1 day
-    }
 
     /**
      * Adding an item to cart. If exist, add +1 to quantity
@@ -138,7 +130,7 @@ class CartController extends Controller
             response("Item doesn't exist in cart", 404);
         }
 
-        $cart[$item_id] = $quantity;
+        $cart[$item_id] = (int)$quantity;
         $this->setCookieCart($cart);
 
         return response(array_values($cart), 200);
@@ -149,10 +141,10 @@ class CartController extends Controller
      * @param string $currency - Wanted currency
      * @return Response with the total price of the cart
      */
-    function getTotalPrice($currency = 'usd')
+    function getTotalPrice($currency)
     {
-        $valid_cur = array('usd', 'eur');
-        $currency = strtolower(($currency));
+        $valid_cur = array('USD', 'EUR');
+        $currency = strtoupper($currency);
 
         if (!in_array($currency, $valid_cur)) {
             return response('Invalid currency selected for displaying total payment', 401);
@@ -184,35 +176,57 @@ class CartController extends Controller
             $totalPrice *= $eur_rate;
         }
 
-        return response("Total price of cart: . $totalPrice .", 200);
+        return response("Total price of cart: $totalPrice $currency", 200);
     }
 
     /**
      * Sort items by product name, price or quantity
      */
-    //TODO: save to cookie after changing the array, check if 'quantity' works
     function sortItems($type)
     {
         $valid_types = array('name', 'price', 'quantity');
         $type = strtolower(($type));
 
+
+        if (!in_array($type, $valid_types)) {
+            return response('Invalid type selected for sorting. You choose between: \'name\', \'price\', \'quantity\'.', 401);
+        }
+
         $cart = $this->getCookieCart();
         $array_keys = array_keys($cart);
 
-        if (!in_array($type, $valid_types)) {
-            return response('Invalid type selected for sorting', 401);
-        }
+        $ordered_prods = null;
+        $ordered_cart = array();
 
         if ($type === 'quantity') {
             sort($cart);
-
-//        $prods = Product::whereIn('id', $array_keys)->get();
         } else {
-            $cart = Product::whereIn('id', $array_keys)->orderBy($type, 'desc')->get();
+            $ordered_prods = Product::whereIn('id', $array_keys)->orderBy($type, 'asc')->get();
+
+            foreach ($ordered_prods as $prod) {
+                $prod_id = $prod->id;
+                $ordered_cart[$prod_id] = (int)$this->getQtyFromCart($prod_id);
+            }
+
+            $cart = $ordered_cart;
         }
 
-        $this->setCookieCart($cart);
-        return response("Cart is ordered by $type", 200);
+        $this->getCookieCart($cart);
+        return response("Cart ordered by $type", 200);
+    }
+
+    /**
+     * Responsible for storing the cart in cookies and encoding it.
+     * @param $cart - cart array
+     * @return bool
+     */
+    function setCookieCart($cart)
+    {
+
+        $cookie_name = $this->getCookieName();
+        $cart_json = json_encode($cart);
+
+        return setcookie($cookie_name, $cart_json, time() + (86400 * 30), '/'); // 86400 = 1 day
     }
 
 
