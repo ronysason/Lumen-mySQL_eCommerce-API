@@ -34,9 +34,9 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
     $router->get('catalog/{id}', ['uses' => 'CatalogController@showCatalogProducts']);
 
-    $router->patch('catalog/{catalog_id}/product/{product_id}/attach', ['uses' => 'CatalogController@attach']);
+    $router->patch('catalog/attach', ['uses' => 'CatalogController@attach']);
 
-    $router->patch('catalog/{catalog_id}/product/{product_id}/detach', ['uses' => 'CatalogController@detach']);
+    $router->patch('catalog/detach', ['uses' => 'CatalogController@detach']);
 });
 
 $router->group(['prefix' => 'cart'], function () use ($router) {
