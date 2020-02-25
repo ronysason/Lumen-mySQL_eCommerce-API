@@ -23,7 +23,7 @@ class ProductController extends Controller
     public function deleteProduct($id)
     {
         Product::findOrFail($id)->delete();
-        return response('Deleted Successfully', 200);
+        return response('Deleted Successfully', 204);
     }
 
     /**
@@ -42,7 +42,6 @@ class ProductController extends Controller
         return response()->json(Product::find($id));
     }
 
-    //TODO: Fix bugs & Check on Postman
     /**
      * Show all products in the database containing the given string in their name
      */

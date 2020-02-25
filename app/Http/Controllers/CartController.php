@@ -6,142 +6,212 @@ use App\Product;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use App\Http\Controllers\Controller;
-use function MongoDB\BSON\toJSON;
 
 class CartController extends Controller
 {
 
-  //TODO
-  function showCart() {
-    $cart = $this->getCookieCart();
-    $array_keys = array_keys($cart);
-
-    $prods = Product::whereIn('id', $array_keys)->orderBy('id', 'desc')->get();
-    $displayProds = array();
-      foreach ($prods as $prod) {
-          array_push($displayProds,array(
-              'name' => $prod->name,
-              'price' => doubleval($prod->price),
-              'qty' => $this->getQtyFromCart($prod->id)
-          ));
-      }
-
-    return response($displayProds, 200);
-
-  }
-
-  function destroy() {
-      setcookie($this->getCookieName(), "", time()-(86400 * 30) , '/');
-  }
-
-  function getQtyFromCart($item_id){
-      $cart = $this->getCookieCart();
-      if(!isset($cart[$item_id])){
-          $cart[$item_id] = 0;
-      }
-      return $cart[$item_id];
-  }
-
-  function getCookieName(){
-      return "cart_items";
-  }
+    function getCookieName() {return "cart_items";}
 
     /**
-     * Responsible for retrieving and unserializing the cart stored in the cookie
+     * Responsible for retrieving and decoding (from json) the cart stored in the cookie
      * @return array
      */
-  function getCookieCart(){
+    function getCookieCart()
+    {
 
-    $cookie_name = $this->getCookieName();
-    $saved_cart_items = null;
+        $cookie_name = $this->getCookieName();
+        $saved_cart_items = null;
 
-    if (isset($_COOKIE[$cookie_name])) {
-      $saved_cart_items = json_decode($_COOKIE[$cookie_name], true);
+        if (isset($_COOKIE[$cookie_name])) {
+            $saved_cart_items = json_decode($_COOKIE[$cookie_name], true);
+        }
+        if ($saved_cart_items == null) {
+            $saved_cart_items = array();
+        }
+
+        return $saved_cart_items;
     }
-    if($saved_cart_items == null){
-        $saved_cart_items = array();
+
+    /**
+     * Returning all cart items as an array
+     */
+    function showCart()
+    {
+        $cart = $this->getCookieCart();
+        $array_keys = array_keys($cart);
+
+        $prods = Product::whereIn('id', $array_keys)->orderBy('id', 'desc')->get();
+        $displayProds = array();
+        foreach ($prods as $prod) {
+            array_push($displayProds, array(
+                'name' => $prod->name,
+                'price' => doubleval($prod->price),
+                'qty' => $this->getQtyFromCart($prod->id)
+            ));
+        }
+
+        return response($displayProds, 200);
+
     }
 
-    return $saved_cart_items;
-  }
+    /**
+     * Removing the cart cookie
+     */
+    function destroy()
+    {
+        setcookie($this->getCookieName(), "", time() - (86400 * 30), '/');
+        return response("Cart deleted successfully", 204);
+    }
+
+    /**
+     * @param $item_id
+     * @return int - quantity of item in cart
+     */
+    function getQtyFromCart($item_id)
+    {
+        $cart = $this->getCookieCart();
+        if (!isset($cart[$item_id])) {
+            $cart[$item_id] = 0;
+        }
+        return $cart[$item_id];
+    }
+
 
     /**
      * Responsible for storing the cart in cookies and serializing it.
      * @param $cart - cart that should be serialized
      * @return bool
      */
-  function setCookieCart($cart) {
-      $cookie_name = $this->getCookieName();
-      $cart_json = json_encode($cart);
-      return setcookie($cookie_name, $cart_json, time() + (86400 * 30), '/'); // 86400 = 1 day
-  }
+    function setCookieCart($cart)
+    {
+        $cookie_name = $this->getCookieName();
+        $cart_json = json_encode($cart);
+        return setcookie($cookie_name, $cart_json, time() + (86400 * 30), '/'); // 86400 = 1 day
+    }
 
-  //TODO
-  function addItem($item_id) {
-      if(!Product::find($item_id)){
-          return response("Item you were trying to add doesnt exist", 404);
-      }
-    $cart = $this->getCookieCart();
-    $cart[$item_id] =  $this->getQtyFromCart($item_id) + 1;
-    $this->setCookieCart($cart);
+    /**
+     * Adding an item to cart. If exist, add +1 to quantity
+     * @param $item_id
+     * @return Response - cart items after adding
+     */
+    function addItem($item_id)
+    {
+        // Checking if items exists in DB
+        if (!Product::find($item_id)) {
+            return response("Item you we're trying to add doesn't exist", 404);
+        }
+        $cart = $this->getCookieCart();
+        $cart[$item_id] = $this->getQtyFromCart($item_id) + 1;
+        $this->setCookieCart($cart);
 
-    return response(array_values($cart), 200);
+        return response(array_values($cart), 200);
+    }
 
-  }
+    /**
+     * @param $item_id - item to be removed
+     * @return Response - cart after deleting
+     */
+    function removeItem($item_id)
+    {
+        $cart = $this->getCookieCart();
 
-  //TODO
-  function removeItem($item) {
+        if (!array_key_exists($item_id, $cart)) {
+            response("Item doesn't exist in cart", 404);
+        }
 
-  }
+        unset($cart[$item_id]);
+        $this->setCookieCart($cart);
 
-  //TODO
-  function updateItem($item, $quantity) {
+        return response(array_values($cart), 200);
+    }
 
-  }
+    /**
+     * @param $item_id
+     * @param $quantity
+     * @return Response - cart after updating
+     */
+    function updateItem($item_id, $quantity)
+    {
+        $cart = $this->getCookieCart();
+        if (!array_key_exists($item_id, $cart)) {
+            response("Item doesn't exist in cart", 404);
+        }
 
-  //TODO
-  function getTotalPrice($currency){
-      $cart = $this->getCookieCart();
-      $array_keys = array_keys($cart);
+        $cart[$item_id] = $quantity;
+        $this->setCookieCart($cart);
 
-      $usd_rate = json_decode(file_get_contents('https://api.exchangeratesapi.io/latest?base=USD'), true);
-      $eur_rate = (float) $usd_rate['rates']['EUR'];
+        return response(array_values($cart), 200);
+    }
 
-      $prices = Product::select('price')->whereIn('id', $array_keys)->get();
-      $totalPrice = 0;
+    /**
+     * Returns the total price of the cart with the given currency.
+     * @param string $currency - Wanted currency
+     * @return Response with the total price of the cart
+     */
+    function getTotalPrice($currency = 'usd')
+    {
+        $valid_cur = array('usd', 'eur');
+        $currency = strtolower(($currency));
 
-      foreach($prices as $price) {
-          $totalPrice += (double) $price->price;
-      }
+        if (!in_array($currency, $valid_cur)) {
+            return response('Invalid currency selected for displaying total payment', 401);
+        }
 
-      echo $totalPrice;
-  }
+        $cart = $this->getCookieCart();
+        $array_keys = array_keys($cart);
 
-  /*
-  Sort items by product name, price or quantity
-  */
-  function sortItems($type) {
-      $valid_types = array('name', 'price', 'quantity');
-      $type = strtolower(($type));
-      $cart = $this->getCookieCart();
-      $prods = null;
-      $array_keys = array_keys($cart);
+        $cur_api_response = file_get_contents('https://api.exchangeratesapi.io/latest?base=USD');
+        $eur_rate = 0.92;
 
-      if(!in_array($type, $valid_types)){
-          return response('Invalid type selected for sorting', 401);
-      }
+        // Checks if getting the currency rate finished successfully.
+        if (!$cur_api_response) {
+            $usd_rates_table = json_decode($cur_api_response, true);
+            $eur_rate = (float)$usd_rates_table['rates']['EUR'];
+        }
 
-      if($type === 'quantity'){
-          sort($cart);
+        $products = Product::select('id', 'price')->whereIn('id', $array_keys)->get();
+        $totalPrice = 0;
+
+        // Calculating the total
+        foreach ($products as $product) {
+            $qnt = $this->getQtyFromCart($product->id);
+            $totalPrice += (((double)$product->price) * $qnt);
+        }
+
+        // We assume the price on the database is represented in USD
+        if ($currency === 'eur') {
+            $totalPrice *= $eur_rate;
+        }
+
+        return response("Total price of cart: . $totalPrice .", 200);
+    }
+
+    /**
+     * Sort items by product name, price or quantity
+     */
+    function sortItems($type)
+    {
+        $valid_types = array('name', 'price', 'quantity');
+        $type = strtolower(($type));
+
+        $cart = $this->getCookieCart();
+        $array_keys = array_keys($cart);
+
+        if (!in_array($type, $valid_types)) {
+            return response('Invalid type selected for sorting', 401);
+        }
+
+        if ($type === 'quantity') {
+            sort($cart);
 
 //        $prods = Product::whereIn('id', $array_keys)->get();
-      }
-      else{
-          $prods = Product::whereIn('id', $array_keys)->orderBy($type, 'desc')->get();
-      }
+        } else {
+            $cart = Product::whereIn('id', $array_keys)->orderBy($type, 'desc')->get();
+        }
 
-      return $prods;
-  }
+        $this->setCookieCart($cart);
+        return response("Cart is ordered by $type", 200);
+    }
 
 
 }
