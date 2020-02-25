@@ -11,10 +11,7 @@ use function MongoDB\BSON\toJSON;
 class CartController extends Controller
 {
 
-    function getCookieName()
-    {
-        return "cart_items";
-    }
+    function getCookieName() {return "cart_items";}
 
     /**
      * Responsible for retrieving and decoding (from json) the cart stored in the cookie
@@ -93,11 +90,16 @@ class CartController extends Controller
         return setcookie($cookie_name, $cart_json, time() + (86400 * 30), '/'); // 86400 = 1 day
     }
 
-    //TODO
+    /**
+     * Adding an item to cart. If exist, add +1 to quantity
+     * @param $item_id
+     * @return Response - cart items after adding
+     */
     function addItem($item_id)
     {
+        // Checking if items exists in DB
         if (!Product::find($item_id)) {
-            return response("Item you were trying to add doesnt exist", 404);
+            return response("Item you we're trying to add doesn't exist", 404);
         }
         $cart = $this->getCookieCart();
         $cart[$item_id] = $this->getQtyFromCart($item_id) + 1;
@@ -106,16 +108,40 @@ class CartController extends Controller
         return response(array_values($cart), 200);
     }
 
-    //TODO
-    function removeItem($item)
+    /**
+     * @param $item_id - item to be removed
+     * @return Response - cart after deleting
+     */
+    function removeItem($item_id)
     {
+        $cart = $this->getCookieCart();
 
+        if (!array_key_exists($item_id, $cart)) {
+            response("Item doesn't exist in cart", 404);
+        }
+
+        unset($cart[$item_id]);
+        $this->setCookieCart($cart);
+
+        return response(array_values($cart), 200);
     }
 
-    //TODO
-    function updateItem($item, $quantity)
+    /**
+     * @param $item_id
+     * @param $quantity
+     * @return Response - cart after updating
+     */
+    function updateItem($item_id, $quantity)
     {
+        $cart = $this->getCookieCart();
+        if (!array_key_exists($item_id, $cart)) {
+            response("Item doesn't exist in cart", 404);
+        }
 
+        $cart[$item_id] = $quantity;
+        $this->setCookieCart($cart);
+
+        return response(array_values($cart), 200);
     }
 
     /**
@@ -144,7 +170,7 @@ class CartController extends Controller
             $eur_rate = (float)$usd_rates_table['rates']['EUR'];
         }
 
-        $products = Product::select('price')->whereIn('id', $array_keys)->get();
+        $products = Product::select('id', 'price')->whereIn('id', $array_keys)->get();
         $totalPrice = 0;
 
         // Calculating the total

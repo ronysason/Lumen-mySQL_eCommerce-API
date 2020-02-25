@@ -22,8 +22,14 @@ class ProductController extends Controller
      */
     public function deleteProduct($id)
     {
-        Product::findOrFail($id)->delete();
-        return response('Deleted Successfully', 204);
+        $find = Product::find($id)->delete();
+
+        if ($find) {
+            return response('Deleted Successfully', 204);
+        } else {
+            return response('Item was not found', 404);
+
+        }
     }
 
     /**

@@ -41,10 +41,6 @@ $router->group(['prefix' => 'api'], function () use ($router) {
 
 $router->group(['prefix' => 'cart'], function () use ($router) {
 
-    /**
-     * Routes for cookies check
-     */
-
     $router->get('show', ['uses' => 'CartController@showCart']);
 
     $router->delete('delete', ['uses' => 'CartController@destroy']);
