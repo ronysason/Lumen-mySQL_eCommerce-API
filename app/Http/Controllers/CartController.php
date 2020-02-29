@@ -20,7 +20,6 @@ class CartController extends Controller
      */
     function getCookieCart()
     {
-
         $cookie_name = $this->getCookieName();
         $saved_cart_items = null;
 
@@ -43,10 +42,10 @@ class CartController extends Controller
         $cart = $this->getCookieCart();
         $array_keys = array_keys($cart);
 
-        $prods = Product::whereIn('id', $array_keys)->get();
         $displayProds = array();
 
-        foreach ($prods as $prod) {
+        foreach ($array_keys as $x) {
+            $prod = Product::find($x);
             array_push($displayProds, array(
                 'id' => $prod->id,
                 'name' => $prod->name,
@@ -179,6 +178,7 @@ class CartController extends Controller
         return response("Total price of cart: $totalPrice $currency", 200);
     }
 
+
     /**
      * Sort items by product name, price or quantity
      */
@@ -228,6 +228,5 @@ class CartController extends Controller
 
         return setcookie($cookie_name, $cart_json, time() + (86400 * 30), '/'); // 86400 = 1 day
     }
-
 
 }
